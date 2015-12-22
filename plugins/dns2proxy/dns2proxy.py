@@ -32,6 +32,7 @@ import signal
 import errno
 from time import sleep
 import argparse
+from multiprocessing import Process
 
 
 # / Setup Globals / -----------------------------------------------------------
@@ -124,6 +125,25 @@ def configure():
         'silent' : args.silent,
         'adminIP' : args.adminIP,
     }
+
+class Dns2proxy(object):
+
+    def __init__(self,
+                interface,
+                noforward=False,
+                arg_ip1=None,
+                arg_ip2=None,
+                arg_ips=[],
+                silent=False,
+                adminIP='192.168.0.1'):
+
+    
+        self.configs = {
+
+
+        }
+
+
 
 def dns2proxy(interface,
             noforward=False,

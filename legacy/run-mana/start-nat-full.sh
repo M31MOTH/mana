@@ -44,6 +44,14 @@ python dns2proxy.py -i $phy&
 cd -
 
 #SSLSplit
+# -D run in debug mode
+# -P Passthrough ssl/tls connections that cannot be split instead of dropping them
+# -Z Disable SSL/TLS commpression on all connections
+# -S log dir
+# -c pemfile Use CA cert from penfile to sign certs forged on the fly
+# -k penfile Use CA private key from penfile to sign certs forged on the fly
+# -O Deny all Online Cert Status Protocol Requests on all proxyspecs and for all OCSP servers 
+# -l log file
 sslsplit -D -P -Z -S /var/lib/mana-toolkit/sslsplit -c /usr/share/mana-toolkit/cert/rogue-ca.pem -k /usr/share/mana-toolkit/cert/rogue-ca.key -O -l /var/lib/mana-toolkit/sslsplit-connect.log.`date "+%s"` \
  https 0.0.0.0 10443 \
  http 0.0.0.0 10080 \
