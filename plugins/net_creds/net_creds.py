@@ -986,26 +986,45 @@ def main(args):
         else:
             sniff(iface=conf.iface, prn=pkt_parser, store=0)
 
-def net_creds(phy='enp3s0', filterip=None):
 
-    #Find the active interface
-    conf.iface = phy
+class Net_creds(object):
 
-    print '[netcreds] Using interface:', conf.iface
+    def __init__(self, phy=None, filterip=None):
 
-    if filterip is not None:
+        self.phy = phy
+        self.filterip = filterip
 
-        sniff(iface=conf.iface,
-            prn=pkt_parser,
-            filter="not host %s" % filterip,
-            store=0)
+    @staticmethod
+    def _start(phy='enp3s0', filterip=None):
+    
+        #Find the active interface
+        conf.iface = phy
+    
+        print '[netcreds] Using interface:', conf.iface
+    
+        if filterip is not None:
+    
+            sniff(iface=conf.iface,
+                prn=pkt_parser,
+                filter="not host %s" % filterip,
+                store=0)
+    
+        else:
+    
+            sniff(iface=conf.iface,
+                prn=pkt_parser,
+                store=0)
 
-    else:
+    def start(self):
+    
+        self.proc = Process(target=self._start, args=(self.phy, self.filterip,))
+        self.proc.daemon = True
+        self.proc.start()
+        
+    def stop(self):
 
-        sniff(iface=conf.iface,
-            prn=pkt_parser,
-            store=0)
+        self.proc.terminate()
+        self.proc.join()
 
 if __name__ == "__main__":
-
    main(parse_args())

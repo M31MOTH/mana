@@ -1,1 +1,1 @@
-import dhcpd
+from dhcpd import Dhcpd

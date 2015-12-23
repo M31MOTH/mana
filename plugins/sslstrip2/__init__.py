@@ -1,1 +1,1 @@
-from sslstrip2 import sslstrip2
+from sslstrip2 import Sslstrip2

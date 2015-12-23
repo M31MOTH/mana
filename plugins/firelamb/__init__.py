@@ -1,1 +1,1 @@
-from firelamb import firelamb
+from firelamb import Firelamb

@@ -1,1 +1,1 @@
-from net_creds import net_creds
+from net_creds import Net_creds

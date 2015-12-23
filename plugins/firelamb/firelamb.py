@@ -262,63 +262,97 @@ def main():
              sslsplitdir=options.sslsplitdir)
 
 # / module main / -------------------------------------------------------------
-def firelamb(iface=None,
-             fname=None,
-             log_by_ip=False,
-             launch_ff=False,
-             sslstriplog=None,
-             sslsplitdir=None):
+class Firelamb(object):
 
-    global psl
-    global ip_logging
+    def __init__(self, 
+                 iface=None,
+                 fname=None,
+                 log_by_ip=False,
+                 launch_ff=False,
+                 sslstriplog=None,
+                 sslsplitdir=None):
 
-    sqlv=sqlite3.sqlite_version.split('.')
+        self.iface = iface
+        self.fname = fname
+        self.log_by_ip = log_by_ip
+        self.launch_ff = launch_ff
+        self.sslstriplog = sslstriplog
+        self.sslsplitdir = sslsplitdir
+    
+    @staticmethod
+    def _start(iface,
+               fname,
+               log_by_ip,
+               launch_ff,
+               sslstriplog,
+               sslsplitdir):
 
-    if sqlv[0] <3 or sqlv[1] < 7:
+        global psl
+        global ip_logging
 
-        print ("MANA (FireLamb) : [!] WARNING. sqlite3 version "
-               "3.7 or greater required. You have version %s.  "
-               "I'll try continue, but will likely not be able "
-               "to write Firefox cookie files.") % sqlite3.sqlite_version
+        sqlv=sqlite3.sqlite_version.split('.')
 
-    psl = PublicSuffixList()
+        if sqlv[0] <3 or sqlv[1] < 7:
 
-    ip_logging=log_by_ip
+            print ("MANA (FireLamb) : [!] WARNING. sqlite3 version "
+                   "3.7 or greater required. You have version %s.  "
+                   "I'll try continue, but will likely not be able "
+                   "to write Firefox cookie files.") % sqlite3.sqlite_version
 
+        psl = PublicSuffixList()
 
-    if fname is None and iface is None and not launch_ff:
-
-            print parser.print_help()
-            exit(-1)
-
-    if launch_ff:
-
-        if (sslsplitdir is not None):
-            parsesslsplit(sslsplitdir)
-        launch_firefox()
-
-    else:
-
-        if not os.path.exists(save_dir):
-                os.makedirs(save_dir)
-        print "MANA (FireLamb) : [+] Saving output to %s" % save_dir
+        ip_logging=log_by_ip
 
 
-        if iface is not None:
+        if fname is None and iface is None and not launch_ff:
 
-            print ("MANA (FireLamb) : [+] Listening for "
-                   "cookie traffic on interface %s  ") % iface
-            sniff(iface=iface,prn=process)
+                print parser.print_help()
+                exit(-1)
 
-        elif fname is not None:
+        if launch_ff:
 
-            print "MANA (FireLamb) : [+] Reading pcap file '%s'...." % fname
-            packets = rdpcap(fname)
+            if (sslsplitdir is not None):
+                parsesslsplit(sslsplitdir)
+            launch_firefox()
 
-            print "MANA (FireLamb) : [+] Processing file contents..."
-            for p in packets:
-                process(p)
-            print "MANA (FireLamb) : [+] Done."
+        else:
+
+            if not os.path.exists(save_dir):
+                    os.makedirs(save_dir)
+            print "MANA (FireLamb) : [+] Saving output to %s" % save_dir
+
+
+            if iface is not None:
+
+                print ("MANA (FireLamb) : [+] Listening for "
+                       "cookie traffic on interface %s  ") % iface
+                sniff(iface=iface,prn=process)
+
+            elif fname is not None:
+
+                print "MANA (FireLamb) : [+] Reading pcap file '%s'...." % fname
+                packets = rdpcap(fname)
+
+                print "MANA (FireLamb) : [+] Processing file contents..."
+                for p in packets:
+                    process(p)
+                print "MANA (FireLamb) : [+] Done."
+
+    def start(self):
+
+        self.proc = Process(target=self._start, args=(self.iface,
+                                        self.fname,
+                                        self.log_by_ip,
+                                        self.launch_ff,
+                                        self.sslstriplog,
+                                        self.sslsplitdir,))
+        self.daemon = True
+        self.start()
+
+    def stop(self):
+
+        self.proc.terminate()
+        self.proc.join()
 
 if __name__ == "__main__":
     main()
