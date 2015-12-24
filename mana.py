@@ -17,6 +17,7 @@ MODES = [
     'noupstream-eap',
     'noupstream-eap-only',
     'noupstream',
+    'interactive',
 ]
 
 
@@ -37,6 +38,58 @@ def am_i_root():
     if os.geteuid():
         exit('[-] Why am I not root? I want root!')
 
+def setup_wizard(args):
+
+    configs = {}
+
+    configs['mode'] = args.mode
+
+    
+    invalid_choice = False
+    while True:
+
+        print '1. NAT- simple'
+        print '2. NAT - full'
+        print '3. No upstream - all'
+        print '4. No upstream - EAP only'
+        print '5. No upstream - EAP'
+        print '6. No upstream'
+
+        if invalid_choice:
+            print 'Invalid choice.'
+
+        print 'Please select a mode from this list above.'
+
+        choice = raw_input('Enter a number: ')
+    
+        if choice == '1':
+            configs['mode'] = 'nat-simple'
+            break
+        elif choice == '2':
+            configs['mode'] = 'nat-full'
+            break
+        elif choice == '3':
+            configs['mode'] = 'noupstream-all'
+            break
+        elif choice == '4':
+            configs['mode'] = 'noupstream-eap-only'
+            break
+        elif choice == '5':
+            configs['mode'] = 'noupstream'
+            break
+        elif choice == '6':
+            configs['mode'] = 'noupstream-eap'
+            break
+
+        invalid_choice = True
+
+    print 'Please give the name of your listening interface.'
+    configs['phy'] = raw_input(': ')
+
+    print 'Please give the name of your listening interface.'
+    configs['phy'] = raw_input(': ')
+        
+
 def configure():
 
     parser = ArgumentParser()
@@ -44,7 +97,7 @@ def configure():
     parser.add_argument('--phy',
                     dest='phy',
                     type=str,
-                    required=True,
+                    required=False,
                     help='Listening interface.')
 
     parser.add_argument('--filter-ips',
@@ -115,6 +168,10 @@ def configure():
 
     args = parser.parse_args()
 
+    if args.mode == 'interactive':
+
+        return setup_wizard(args)
+
     return {
 
         'phy' : args.phy,
@@ -133,91 +190,6 @@ def configure():
         'mode' : args.mode,
         'filter_ips' : args.filter_ips,
     }
-## if problems with current start_nat_full, use this instead
-#def start_nat_full(configs):
-#
-#    exit('debug exit')
-#
-#    core.iptables.flush()
-#
-#    core.utils.hostname('WRT54G')
-#    core.utils.rfkill()
-#    core.utils.macchanger(configs['phy'])
-#
-#    hostapd = plugins.hostapd.Karma(phy=configs['phy'],
-#                            bssid=configs['bssid'],
-#                            ssid=configs['ssid'],
-#                            channel=configs['channel'])
-#
-#    core.utils.route.add_nat_full(configs['phy'])
-#
-#    core.utils.set_ip_forward(1)
-#
-#    dhcpd = plugins.dhcpd.Dhcpd(phy=configs['phy'],
-#                                subnet='10.0.0.0',
-#                                netmask='255.255.255.0',
-#                                range_start='10.0.0.100',
-#                                range_end='10.0.0.254',
-#                                option_routers='10.0.0.1')
-#
-#    core.iptables.nat_full(upstream=configs['upstream'], phy=configs['phy'])
-#
-#    core.iptables.hsts_bypass(phy=configs['phy'], sslstrip_port=configs['sslstrip2']['port'])
-#
-#    core.iptables.sslsplit(phy=configs['phy'])
-#    
-#    hostapd.start()
-#
-#    dhcpd.start()
-#
-#    #TODO make sure you pass the following flags: -a -w
-#    sslstrip2 = plugin.sslstrip2.Sslstrip2(
-#                            log_file=configs['sslstrip2']['logfile'],
-#                            port=configs['sslstrip2']['port'],
-#                            fav=configs['sslstrip2']['fav'],
-#                            kill_sessions=configs['sslstrip2']['killSessions'])
-#    sslstrip2.start()
-#
-#    time.sleep(2)
-#
-#    dns2proxy = plugins.dns2proxy.Dns2proxy(interface=configs['phy'])
-#    dns2proxy.start()
-#
-#    time.sleep(2)
-#
-#    # start sslsplit
-#    sslsplit = plugins.sslsplit.Sslsplit(debug=True,
-#                            enable_passthru=True,
-#                            disable_compression=True,
-#                            ca_cert=CA_CERT,
-#                            ca_key=CA_KEY)
-#
-#    sslsplit.start()
-#
-#    time.sleep(2)
-#
-#    # start FireLamb
-#    firelamb = plugins.firelamb.Firelamb(phy=configs['phy'])
-#    firelamb.start()
-#
-#    net_creds = plugins.net_creds.Net_creds(phy=configs['phy'])
-#    net_creds.start()
-#
-#    time.sleep(2)
-#
-#    raw_input('Press enter to exit...')
-#
-#    net_creds.stop()
-#    dns2proxy.stop()
-#    sslsplit.stop()
-#    hostapd.stop()
-#    firelamb.stop()
-#    sslstrip2.stop()
-#    dhcpd.stop()
-#
-#    core.iptables.flush()
-#    core.utils.set_ip_forward(0)
-
 
 def start_nat_full(configs):
 

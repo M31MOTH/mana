@@ -963,8 +963,6 @@ class Dns2proxy(object):
                 DEBUGLOG('serving a request.')
                 requestHandler(address, message)
 
-# / Launch Module as Script / --------------------------------------------------
-
 
 if __name__ == '__main__':
 
