@@ -96,20 +96,19 @@ if __name__ == '__main__':
 
     running_daemons = []
 
+    # perform nat initial setup
+    print '[*] Changing hostname to: ', options.hostname
+    core.utils.hostname(options.hostname)
+    print '[*] Killing wifi'
+    core.utils.rfkill()
+    print '[*] Bringing up %s with spoofed mac' % options.phy
+    core.utils.macchanger(options.phy)
+    print '[*] Bringing up %s with spoofed mac' % options.phy
+    core.utils.set_ip_forward(1)
+
     # core stuff goes here
     if options.nat:
-    
-        # perform nat initial setup
-        print '[*] Changing hostname to: ', options.hostname
-        core.utils.hostname(options.hostname)
-        print '[*] Killing wifi'
-        core.utils.rfkill()
-        print '[*] Bringing up %s with spoofed mac' % options.phy
-        core.utils.macchanger(options.phy)
 
-        # enable packet forwarding and set up routing
-        print '[*] Bringing up %s with spoofed mac' % options.phy
-        core.utils.set_ip_forward(1)
         core.utils.route.add_nat(configs['phy'])
 
         core.iptables.flush()
