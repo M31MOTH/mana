@@ -30,6 +30,8 @@ from sslstrip.URLMonitor import URLMonitor
 from sslstrip.CookieCleaner import CookieCleaner
 from plugin import Plugin
 
+from core import iptables
+
 import sys, getopt, logging, traceback, string, os
 
 gVersion = "0.9 +"
@@ -47,6 +49,8 @@ class Sslstrip2(Plugin):
             'log_level'     : options.log_level,
         
         }
+
+        iptables.sslstrip(phy=options.phy)
 
     @staticmethod
     def _start(configs):
