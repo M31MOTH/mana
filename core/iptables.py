@@ -1,6 +1,6 @@
 import os
 
-def nat_full(phy=None, upstream=None):
+def nat(phy=None, upstream=None):
 
     os.system('iptables --policy INPUT ACCEPT')
     os.system('iptables --policy FORWARD ACCEPT')
@@ -9,9 +9,11 @@ def nat_full(phy=None, upstream=None):
     os.system('iptables -t nat -F')
     os.system('iptables -t nat -A POSTROUTING -o %s -j MASQUERADE' % upstream)
     os.system('iptables -A FORWARD -i %s -o %s -j ACCEPT' % (phy, upstream))
+
+def dns2proxy(phy=None):
     os.system('iptables -t nat -A PREROUTING -i %s -p udp --dport 53 -j DNAT --to 10.0.0.1' % phy)
 
-def hsts_bypass(phy=None, sslstrip_port=10000):
+def sslstrip(phy=None, sslstrip_port=10000):
 
     os.system('iptables -t nat -A PREROUTING -i %s -p tcp --destination-port 80 -j REDIRECT --to-port %s' % (phy, sslstrip_port))
 

@@ -1,337 +1,146 @@
-import plugins
-import core
+#!/usr/bin/python
+
+import sys
 import os
-import time
+import core
 
-from sys import exit
-from multiprocessing import Process
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawTextHelpFormatter
+from plugins import *
 
-CA_CERT = '../run-mana/cert/rogue-ca.pem'
-CA_KEY = '../run-mana/cert/rogue-ca.key'
-
-MODES = [
-    'nat-simple',
-    'nat-full',
-    'noupstream-all',
-    'noupstream-eap',
-    'noupstream-eap-only',
-    'noupstream',
-    'interactive',
-]
-
+__version__ = '0.1.0'
 
 BANNER = '''
-                               _              _ _    _ _   
-                              | |            | | |  (_) |  
- _ __ ___   __ _ _ __   __ _  | |_ ___   ___ | | | ___| |_ 
-| '_ ` _ \ / _` | '_ \ / _` | | __/ _ \ / _ \| | |/ / | __|
-| | | | | | (_| | | | | (_| | | || (_) | (_) | |   <| | |_ 
-|_| |_| |_|\__,_|_| |_|\__,_|  \__\___/ \___/|_|_|\_\_|\__|
-                                                           
+                                    _              _ _    _ _   
+  _ __ ___   __ _ _ __   __ _      | |_ ___   ___ | | | _(_) |_ 
+ | '_ ` _ \ / _` | '_ \ / _` |_____| __/ _ \ / _ \| | |/ / | __|
+ | | | | | | (_| | | | | (_| |_____| || (_) | (_) | |   <| | |_ 
+ |_| |_| |_|\__,_|_| |_|\__,_|      \__\___/ \___/|_|_|\_\_|\__|
 
-        
+        Developed by Dominic White (singe) & Ian de Villiers @ sensepost
+
+                             research@sensepost.com
+
+        Ported to Python by Gabriel Ryan (gabriel@solstice.me)
+
 '''
 
 def am_i_root():
 
     if os.geteuid():
-        exit('[-] Why am I not root? I want root!')
+        sys.exit('[-] Why am I not root? I want root!')
 
-def setup_wizard(args):
-
-    configs = {}
-
-    configs['mode'] = args.mode
-
-    
-    invalid_choice = False
-    while True:
-
-        print '1. NAT- simple'
-        print '2. NAT - full'
-        print '3. No upstream - all'
-        print '4. No upstream - EAP only'
-        print '5. No upstream - EAP'
-        print '6. No upstream'
-
-        if invalid_choice:
-            print 'Invalid choice.'
-
-        print 'Please select a mode from this list above.'
-
-        choice = raw_input('Enter a number: ')
-    
-        if choice == '1':
-            configs['mode'] = 'nat-simple'
-            break
-        elif choice == '2':
-            configs['mode'] = 'nat-full'
-            break
-        elif choice == '3':
-            configs['mode'] = 'noupstream-all'
-            break
-        elif choice == '4':
-            configs['mode'] = 'noupstream-eap-only'
-            break
-        elif choice == '5':
-            configs['mode'] = 'noupstream'
-            break
-        elif choice == '6':
-            configs['mode'] = 'noupstream-eap'
-            break
-
-        invalid_choice = True
-
-    print 'Please give the name of your listening interface.'
-    configs['phy'] = raw_input(': ')
-
-    print 'Please give the name of your listening interface.'
-    configs['phy'] = raw_input(': ')
-        
-
-def configure():
-
-    parser = ArgumentParser()
-
-    parser.add_argument('--phy',
-                    dest='phy',
-                    type=str,
-                    required=False,
-                    help='Listening interface.')
-
-    parser.add_argument('--filter-ips',
-                    dest='filter_ips',
-                    nargs='*',
-                    default=[],
-                    required=False,
-                    help='Filter for these ip addresses')
-
-    parser.add_argument('--upstream',
-                    dest='upstream',
-                    type=str,
-                    required=False,
-                    default=None,
-                    help='Upstream interface.')
-
-    parser.add_argument('--mode',
-                    dest='mode',
-                    choices=MODES,
-                    type=str,
-                    required=True,
-                    help='Choose mode')
-
-    parser.add_argument('--sslstrip-log',
-                    dest='sslstrip_log',
-                    type=str,
-                    required=False,
-                    default='sslstrip2.log',
-                    help='Specify sslstrip2 log file.')
-
-    parser.add_argument('--sslstrip-port',
-                    dest='sslstrip_port',
-                    type=int,
-                    required=False,
-                    default=10000,
-                    help='Specify sslstrip2 port.')
-
-    parser.add_argument('--use-favicon',
-                    dest='use_favicon',
-                    action='store_true',
-                    help='Use lock favicon in sslstrip.')
-
-    parser.add_argument('--kill-sessions',
-                    dest='kill_sessions',
-                    action='store_true',
-                    help='Kill existing sessions.')
-
-    parser.add_argument('--bssid',
-                    dest='bssid',
-                    type=str,
-                    required=False,
-                    default='00:11:22:33:44:00',
-                    help='Set access point BSSID')
-
-    parser.add_argument('--essid',
-                    dest='essid',
-                    required=False,
-                    type=str,
-                    default='Totally Legit',
-                    help='Set access point ESSID (network name)')
-
-    parser.add_argument('--channel',
-                    dest='channel',
-                    required=False,
-                    type=int,
-                    default=int,
-                    help='Set acccess point channel.')
-
-    args = parser.parse_args()
-
-    if args.mode == 'interactive':
-
-        return setup_wizard(args)
-
-    return {
-
-        'phy' : args.phy,
-        'filter_ips' : args.filter_ips,
-        'upstream' : args.upstream,
-        'sslstrip2' : {
-
-            'logfile' : args.sslstrip_log,
-            'port' : args.sslstrip_port,
-            'fav' : args.use_favicon,
-            'killSessions' : args.kill_sessions,
-        },
-        'bssid' : args.bssid,
-        'ssid' : args.essid,
-        'channel' : args.channel,
-        'mode' : args.mode,
-        'filter_ips' : args.filter_ips,
-    }
-
-def start_nat_full(configs):
-
-    core.utils.hostname('WRT54G')
-    core.utils.rfkill()
-    core.utils.macchanger(configs['phy'])
-
-    core.utils.set_ip_forward(1)
-
-    core.utils.route.add_nat_full(configs['phy'])
-
-    core.iptables.flush()
-    core.iptables.nat_full(upstream=configs['upstream'], phy=configs['phy'])
-    core.iptables.hsts_bypass(phy=configs['phy'], sslstrip_port=configs['sslstrip2']['port'])
-    core.iptables.sslsplit(phy=configs['phy'])
-
-    hostapd = plugins.hostapd.Karma(phy=configs['phy'],
-                            bssid=configs['bssid'],
-                            ssid=configs['ssid'],
-                            channel=configs['channel'])
-
-
-
-    dhcpd = plugins.dhcpd.Dhcpd(phy=configs['phy'],
-                                subnet='10.0.0.0',
-                                netmask='255.255.255.0',
-                                range_start='10.0.0.100',
-                                range_end='10.0.0.254',
-                                option_routers='10.0.0.1')
-
-    #TODO make sure you pass the following flags: -a -w
-    sslstrip2 = plugin.sslstrip2.Sslstrip2(
-                            log_file=configs['sslstrip2']['logfile'],
-                            port=configs['sslstrip2']['port'],
-                            fav=configs['sslstrip2']['fav'],
-                            kill_sessions=configs['sslstrip2']['killSessions'])
-
-    dns2proxy = plugins.dns2proxy.Dns2proxy(interface=configs['phy'])
-
-    sslsplit = plugins.sslsplit.Sslsplit(debug=True,
-                            enable_passthru=True,
-                            disable_compression=True,
-                            ca_cert=CA_CERT,
-                            ca_key=CA_KEY)
-
-    firelamb = plugins.firelamb.Firelamb(phy=configs['phy'])
-    
-    net_creds = plugins.net_creds.Net_creds(phy=configs['phy'])
-
-    hostapd.start()
-    time.sleep(5)
-
-    dhcpd.start()
-    time.sleep(2)
-
-    sslstrip2.start()
-    time.sleep(3)
-
-    dns2proxy.start()
-    time.sleep(2)
-
-    sslsplit.start()
-    time.sleep(2)
-
-    firelamb.start()
-    time.sleep(2)
-
-    net_creds.start()
-    time.sleep(2)
-
-    raw_input('Press enter to exit...')
-
-    net_creds.stop()
-    dns2proxy.stop()
-    sslsplit.stop()
-    hostapd.stop()
-    firelamb.stop()
-    sslstrip2.stop()
-    dhcpd.stop()
-
-    core.iptables.flush()
-    core.utils.set_ip_forward(0)
-
-def start_nat_simple(configs):
-    print 'starting nat simple'
-
-def start_noupstream_all(configs):
-    print 'starting noupstream all'
-
-def start_noupstream_eap(configs):
-    print 'starting noupstream eap'
-
-def start_noupstream_eap_only(configs):
-    print 'starting noupstream eap only'
-
-def start_noupstream(configs):
-    print 'starting noupstream'
-
-def print_banner(configs):
+def print_banner():
 
     print BANNER
 
-    print '    phy interface ---------->', configs['phy']
-    print '    upstream interface ----->', configs['upstream']
-    print '    bssid ------------------>', configs['bssid']
-    print '    channel ---------------->', configs['channel']
-    print '    filter ips ------------->', configs['filter_ips']
-    print '    sslstrip2 -------------->', 'enabled'
-    print '        |'
-    print '        -- logfile ------->', configs['sslstrip2']['logfile']
-    print '        |'
-    print '        -- port ---------->',configs['sslstrip2']['port']
-    print '        |'
-    print '        -- lock ico ------>',configs['sslstrip2']['fav']
-    print '        |'
-    print '        -- kill sessions ->',configs['sslstrip2']['killSessions']
-    print 
-    print '    [$] Using mode:', configs['mode']
 
-if __name__ == "__main__":
 
-    am_i_root()
+if __name__ == '__main__':
 
-    configs = configure()
+#    am_i_root()
+        
+    print_banner()
 
-    print_banner(configs)
+    parser = ArgumentParser()
 
-    if configs['mode'] == 'nat-full':
-        start_nat_full(configs)
+    sgroup = parser.add_argument_group('mana-toolkit', 'Options for mana-toolkit')
+    sgroup.add_argument('--phy',
+                    dest='phy',
+                    type=str,
+                    required=True,
+                    help='Specify an interface to listen on.')
+    sgroup.add_argument('--no-upstream',
+                    dest='no_upstream',
+                    action='store_true',
+                    help='Run in no upstream mode.')
+    sgroup.add_argument('--nat',
+                    dest='nat',
+                    action='store_true',
+                    help='Run in no upstream mode.')
+    sgroup.add_argument('--bssid',
+                    dest='bssid',
+                    type=str,
+                    default='00:11:22:33:44:00',
+                    required=False,
+                    metavar='<mac_addr>',
+                    help='Set bssid of access point.')
+    sgroup.add_argument('--essid',
+                    dest='essid',
+                    type=str,
+                    default='Totally Legit',
+                    required=False,
+                    metavar='<network_name>',
+                    help='Set essid of access point.')
+    sgroup.add_argument('--channel',
+                    dest='channel',
+                    type=int,
+                    default=6,
+                    required=False,
+                    metavar='<channel_number>',
+                    help='Have access point use channel <channel_number>')
 
-    elif configs['mode'] == 'nat-simple':
-        start_nat_simple(configs)
+    plugins = [plugin(parser) for plugin in plugin.Plugin.__subclasses__()]
 
-    elif configs['mode'] == 'noupstream-all':
-        start_noupstream_all(configs)
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+
+    print plugins
+    options = parser.parse_args()
+
+    # load only selected plugins
+    for plugin in plugins:
+        if plugin.is_selected(options):
+            plugin.initialize(options)
+
+    running_daemons = []
+
+    # core stuff goes here
+    if options.nat:
     
-    elif configs['mode'] == 'noupstream-eap':
-        start_noupstream_eap(configs)
+        # perform nat initial setup
+        print '[*] Changing hostname to: ', options.hostname
+        core.utils.hostname(options.hostname)
+        print '[*] Killing wifi'
+        core.utils.rfkill()
+        print '[*] Bringing up %s with spoofed mac' % options.phy
+        core.utils.macchanger(options.phy)
 
-    elif configs['mode'] == 'noupstream-eap-only':
-        start_noupstream_eap_only(configs)
+        # enable packet forwarding and set up routing
+        print '[*] Bringing up %s with spoofed mac' % options.phy
+        core.utils.set_ip_forward(1)
+        core.utils.route.add_nat(configs['phy'])
 
-    elif configs['mode'] == 'noupstream':
-        start_noupstream_eap(configs)
+        core.iptables.flush()
+        core.iptables.nat(upstream=configs['upstream'], phy=configs['phy'])
+
+        # configure and start core daemons 
+        hostapd = core.Hostapd(options)
     
+        dhcpd = core.dhcpd.Dhcpd(options)
+
+        # start core services
+        hostapd.start()
+        running_daemons.append(hostapd)
+
+        dhcpd.start()
+        running_daemons.append(dhcpd)
+    
+    else:
+
+        print 'Entering no-upstream mode.'
+
+    # start only selected plugins
+    for plugin in plugins:
+        if plugin.is_selected(options):
+            print '[*] Starting', plugin.name
+            plugin.start()
+            running_daemons.append(plugin)
+
+
+    raw_input('[*] Press enter to quit.')
+
+    # stop all running daemons
+    for daemon in running_daemons:
+        print '[*] Stopping', daemon.name
+        daemon.stop()
