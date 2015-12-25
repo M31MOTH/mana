@@ -37,11 +37,12 @@ def print_banner():
 
 if __name__ == '__main__':
 
-#    am_i_root()
+    am_i_root()
         
     print_banner()
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(description='mana-toolkit version %s',
+                        formatter_class=RawTextHelpFormatter)
 
     sgroup = parser.add_argument_group('mana-toolkit', 'Options for mana-toolkit')
     sgroup.add_argument('--phy',

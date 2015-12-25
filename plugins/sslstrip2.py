@@ -38,6 +38,11 @@ gVersion = "0.9 +"
 
 class Sslstrip2(Plugin):
 
+    name = 'sslstrip2'
+    optname = 'sslstrip2'
+    desc = 'Stripping proxy'
+    sleep_time = 2
+
     def initialize(self, options):
 
         self.configs = {
@@ -52,6 +57,31 @@ class Sslstrip2(Plugin):
 
         iptables.sslstrip(phy=options.phy)
 
+    def options(self, options):
+
+        options.add_argument('--log-file',
+                        dest='log_file',
+                        type=str,
+                        required=False,
+                        default='sslstrip.log',
+                        metavar='<filename>',
+                        help='Log output to <filename>')
+        options.add_argument('--listen-port',
+                        dest='listen_port',
+                        type=int,
+                        required=False,
+                        default=10000,
+                        metavar='<port_number>',
+                        help='Listen for incoming packets on port <port_number>')
+        options.add_argument('--spoof-favicon',
+                        dest='spoof_favicon',
+                        action='store_true',
+                        help="Place spoofed Lock Icon in victim's address bar")
+        options.add_argument('--kill_sessions',
+                        dest='kill_sessions',
+                        action='store_true',
+                        help='Kill existing sessions')
+
     @staticmethod
     def _start(configs):
 
@@ -59,7 +89,7 @@ class Sslstrip2(Plugin):
         listenPort = configs['listen_port']
         spoofFavicon = configs['spoof_favicon']
         killSessions = configs['kill_sessions']
-        logLevel = configs['log_level']
+        logLevel = logging.WARNING
     
         logging.basicConfig(level=logLevel, format='%(asctime)s %(message)s',
                             filename=logFile, filemode='w')
