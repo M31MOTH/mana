@@ -1,10 +1,14 @@
 import os
+import time
+
 from multiprocessing import Process
+from configs import configs_path, CONF_DIR
 
-CONF_PATH = '/etc/dhcp/dhcpd.conf'
-
+CONF_PATH = '%s/dhcpd.conf' % CONF_DIR 
 
 class Dhcpd(object):
+
+    name = 'dhcpd'
 
     def __init__(self, options):
         
@@ -33,6 +37,8 @@ class Dhcpd(object):
                     '}'
                 ))
 
+        self.options = options
+
     @staticmethod
     def _start(configs):
 
@@ -40,7 +46,7 @@ class Dhcpd(object):
     
     def start(self):
     
-        self.proc = Process(target=self._start, args=({'phy' : options.phy},))
+        self.proc = Process(target=self._start, args=({'phy' : self.options.phy},))
         self.proc.daemon = True
         self.proc.start()
         time.sleep(5)
@@ -49,3 +55,4 @@ class Dhcpd(object):
 
         self.proc.terminate()
         self.proc.join()
+        os.system('killall dhcpd')

@@ -11,7 +11,7 @@ class route(object):
         pass
 
     @staticmethod
-    def add_nat_full(phy):
+    def add_nat(phy):
         os.system('ifconfig %s 10.0.0.1 netmask 255.255.255.0' % phy)
         os.system('route add -net 10.0.0.0 netmask 255.255.255.0 gw 10.0.0.1')
     

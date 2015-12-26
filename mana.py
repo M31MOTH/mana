@@ -48,6 +48,11 @@ if __name__ == '__main__':
                     type=str,
                     required=True,
                     help='Specify an interface to listen on.')
+    sgroup.add_argument('--upstream',
+                    dest='upstream',
+                    type=str,
+                    required=False,
+                    help='Specify gateway inteface to forward traffic to')
     sgroup.add_argument('--no-upstream',
                     dest='no_upstream',
                     action='store_true',
@@ -116,10 +121,10 @@ if __name__ == '__main__':
     # core stuff goes here
     if options.nat:
 
-        core.utils.route.add_nat(configs['phy'])
+        core.utils.route.add_nat(options.phy)
 
         core.iptables.flush()
-        core.iptables.nat(upstream=configs['upstream'], phy=configs['phy'])
+        core.iptables.nat(upstream=options.upstream, phy=options.phy)
 
         # configure and start core daemons 
         hostapd = core.Hostapd(options)

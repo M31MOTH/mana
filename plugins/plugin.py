@@ -22,10 +22,12 @@ from multiprocessing import Process
 
 class Plugin(object):
 
-    name        = "Generic plugin"
-    optname     = "generic"
-    desc = ''
-    sleep_time = 2
+    name         = "Generic plugin"
+    optname      = "generic"
+    desc         = ''
+    sleep_time   = 2
+    kill_command = ''
+    
 
     def __init__(self, parser):
     
@@ -67,6 +69,9 @@ class Plugin(object):
 
     def stop(self):
 
+        if self.kill_command:
+
+            os.system('killall %s' % self.kill_command)
+            
         self.proc.terminate()
         self.proc.join()
-

@@ -4,9 +4,6 @@ from plugin import Plugin
 from plugin_deps import dns2proxy
 from core import iptables
 
-
-gVersion = "0.9 +"
-
 class Dns2proxy(Plugin):
 
     name = 'dns2proxy'
