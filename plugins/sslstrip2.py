@@ -51,7 +51,6 @@ class Sslstrip2(Plugin):
             'listen_port' : options.listen_port,
             'spoof_favicon' : options.spoof_favicon,
             'kill_sessions' : options.kill_sessions,
-            'log_level'     : options.log_level,
         
         }
 

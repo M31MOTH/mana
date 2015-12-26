@@ -16,16 +16,16 @@
 # USA
 #
 
-import os
+import os, time
 
 from multiprocessing import Process
 
 class Plugin(object):
 
-    name = 'Generic plugin'
-    optname = 'generic'
+    name        = "Generic plugin"
+    optname     = "generic"
     desc = ''
-    sleep_time = 0
+    sleep_time = 2
 
     def __init__(self, parser):
     
@@ -63,7 +63,7 @@ class Plugin(object):
         self.proc = Process(target=self._start, args=(self.configs,))
         self.proc.daemon = True
         self.proc.start()
-        time.sleep(sleep_time)
+        time.sleep(self.sleep_time)
 
     def stop(self):
 

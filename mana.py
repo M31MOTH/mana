@@ -33,8 +33,6 @@ def print_banner():
 
     print BANNER
 
-
-
 if __name__ == '__main__':
 
     am_i_root()
@@ -79,20 +77,29 @@ if __name__ == '__main__':
                     required=False,
                     metavar='<channel_number>',
                     help='Have access point use channel <channel_number>')
+    sgroup.add_argument('--hostname',
+                    dest='hostname',
+                    type=str,
+                    default='WRT54G',
+                    required=False,
+                    metavar='<hostname>',
+                    help='Set hostname to <hostname>')
 
     plugins = [plugin(parser) for plugin in plugin.Plugin.__subclasses__()]
+
+    print plugins
+    options = parser.parse_args()
 
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
-    print plugins
-    options = parser.parse_args()
 
     # load only selected plugins
     for plugin in plugins:
         if plugin.is_selected(options):
             plugin.initialize(options)
+
 
     running_daemons = []
 
