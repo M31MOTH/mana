@@ -195,8 +195,9 @@ def launch_firefox():
         print "MANA (FireLamb) :  [%d] - %s" %(n,list[n])
 
     if( len(list)>0):
-        print "MANA (FireLamb) :  Enter the session number you'd like to launch, or enter 'a' for all"
-        resp=raw_input(" Input:")
+        #print "MANA (FireLamb) :  Enter the session number you'd like to launch, or enter 'a' for all"
+        #resp=raw_input(" Input:")
+        resp = 'a'
         if(resp == 'a'):
             for n in list:
                 print "MANA (FireLamb) : firefox -profile %s %s/visited.html" %(n,n)
