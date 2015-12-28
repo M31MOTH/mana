@@ -1,3 +1,12 @@
 [submodule "hostapd-mana"]
 	path = hostapd-mana
 	url = https://github.com/sensepost/hostapd-mana
+[submodule "plugin_deps/dns2proxy"]
+	path = plugin_deps/dns2proxy
+	url = https://github.com/s0lst1c3/dns2proxy.git
+[submodule "plugin_deps/sslstrip2"]
+	path = plugin_deps/sslstrip2
+	url = https://github.com/s0lst1c3/sslstrip2.git
+[submodule "plugin_deps/net_creds"]
+	path = plugin_deps/net_creds
+	url = https://github.com/s0lst1c3/net_creds.git
