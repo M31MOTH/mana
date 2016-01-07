@@ -5,6 +5,7 @@ import os
 import core
 
 from argparse import ArgumentParser, RawTextHelpFormatter
+from configs import ENNODES
 from plugins import *
 
 __version__ = '0.1.0'
@@ -24,14 +25,29 @@ BANNER = '''
 
 '''
 
+def error_handler(msg):
+    sys.exit('[-] %s' % msg)
+
 def am_i_root():
 
     if os.geteuid():
-        sys.exit('[-] Why am I not root? I want root!')
+        error_handler('Why am I not root? I want root!')
 
 def print_banner():
 
     print BANNER
+
+def invoke_metasploit():
+    os.system('msfconsole -r ./conf/karmetasploit.rc')
+
+def create_ennode():
+    try:
+        os.mkfifo(ENNODES)
+    except OSError, e:
+        error_handler('Failed to create FIFO: %s' % e)
+
+def destroy_ennode():
+    os.remove(ENNODES)
 
 if __name__ == '__main__':
 
@@ -48,6 +64,12 @@ if __name__ == '__main__':
                     type=str,
                     required=True,
                     help='Specify an interface to listen on.')
+    sgroup.add_argument('--phy0',
+                    dest='phy0',
+                    type=str,
+                    default='wlan0_0',
+                    required=False,
+                    help='Specify an interface to listen on.')
     sgroup.add_argument('--upstream',
                     dest='upstream',
                     type=str,
@@ -55,6 +77,18 @@ if __name__ == '__main__':
                     help='Specify gateway inteface to forward traffic to')
     sgroup.add_argument('--no-upstream',
                     dest='no_upstream',
+                    action='store_true',
+                    help='Run in no upstream mode.')
+    sgroup.add_argument('--no-upstream-all',
+                    dest='no_upstream_all',
+                    action='store_true',
+                    help='Run in no upstream mode.')
+    sgroup.add_argument('--no-upstream-eap',
+                    dest='no_upstream_eap',
+                    action='store_true',
+                    help='Run in no upstream mode.')
+    sgroup.add_argument('--no-upstream-eaponly',
+                    dest='no_upstream_eap_only',
                     action='store_true',
                     help='Run in no upstream mode.')
     sgroup.add_argument('--nat',
@@ -71,7 +105,14 @@ if __name__ == '__main__':
     sgroup.add_argument('--essid',
                     dest='essid',
                     type=str,
-                    default='Totally Legit',
+                    default='TotallyLegit',
+                    required=False,
+                    metavar='<network_name>',
+                    help='Set essid of access point.')
+    sgroup.add_argument('--essid-secure',
+                    dest='essid_secure',
+                    type=str,
+                    default='TotallyLegitSecure',
                     required=False,
                     metavar='<network_name>',
                     help='Set essid of access point.')
@@ -97,8 +138,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
-
+        error_handler('Aborting.')
 
     # load only selected plugins
     for plugin in plugins:
@@ -108,15 +148,17 @@ if __name__ == '__main__':
 
     running_daemons = []
 
-    # perform nat initial setup
-    print '[*] Changing hostname to: ', options.hostname
-    core.utils.hostname(options.hostname)
-    print '[*] Killing wifi'
-    core.utils.rfkill()
-    print '[*] Bringing up %s with spoofed mac' % options.phy
-    core.utils.macchanger(options.phy)
-    print '[*] Bringing up %s with spoofed mac' % options.phy
-    core.utils.set_ip_forward(1)
+    ## perform nat initial setup
+    #print '[*] Changing hostname to: ', options.hostname
+    #core.utils.hostname(options.hostname)
+    #print '[*] Killing wifi'
+    #core.utils.rfkill()
+    #print '[*] Bringing up %s with spoofed mac' % options.phy
+    #core.utils.macchanger(options.phy)
+    #print '[*] Bringing up %s with spoofed mac' % options.phy
+    #core.utils.set_ip_forward(1)
+    print '[*] Creating ennode: %s' % ENNODES
+    create_ennode()
 
     # core stuff goes here
     if options.nat:
@@ -138,9 +180,154 @@ if __name__ == '__main__':
         dhcpd.start()
         running_daemons.append(dhcpd)
     
+    elif options.no_upstream_all:
+
+        ## configure core services
+        #dnsspoof = core.Dnsspoof(options)
+        #dhcpd = core.dhcpd.Dhcpd(options)
+        #hostapd = core.Hostapd(options)
+        #apache = core.Apache()
+        #tinyproxy = core.Tinyproxy()
+        #stunnel = core.Stunnel()
+        crackapd = core.Crackapd()
+
+        ## start core services
+        #print '[*] Starting dnsspoof'
+        #dnsspoof.start()
+        #running_daemons.append(dnsspoof)
+
+        #hostapd.start()
+        #running_daemons.append(hostapd)
+
+        #dhcpd.start()
+        #running_daemons.append(dhcpd)
+
+        #apache.start()
+        #running_daemons.append(apache)
+
+        #tinyproxy.start()
+        #running_daemons.append(tinyproxy)
+
+        #stunnel.start()
+        #running_daemons.append(stunnel)
+
+        crackapd.start()
+        running_daemons.append(crackapd)
+
+        invoke_metasploit()
+
+    elif options.no_upstream_eap:
+
+        ## configure core services
+        #dnsspoof = core.Dnsspoof(options)
+        #dhcpd = core.dhcpd.Dhcpd(options)
+        #hostapd = core.Hostapd(options)
+        #apache = core.Apache()
+        #tinyproxy = core.Tinyproxy()
+        #stunnel = core.Stunnel()
+        crackapd = core.Crackapd()
+
+        ## start core services
+        #print '[*] Starting dnsspoof'
+        #dnsspoof.start()
+        #running_daemons.append(dnsspoof)
+
+        #hostapd.start()
+        #running_daemons.append(hostapd)
+
+        #dhcpd.start()
+        #running_daemons.append(dhcpd)
+
+        #apache.start()
+        #running_daemons.append(apache)
+
+        #tinyproxy.start()
+        #running_daemons.append(tinyproxy)
+
+        #stunnel.start()
+        #running_daemons.append(stunnel)
+
+        crackapd.start()
+        running_daemons.append(crackapd)
+
+        invoke_metasploit()
+
+    elif options.no_upstream:
+
+        ## configure core services
+        #dnsspoof = core.Dnsspoof(options)
+        #dhcpd = core.dhcpd.Dhcpd(options)
+        #hostapd = core.Hostapd(options)
+        #apache = core.Apache()
+        #tinyproxy = core.Tinyproxy()
+        #stunnel = core.Stunnel()
+        crackapd = core.Crackapd()
+
+        ## start core services
+        #print '[*] Starting dnsspoof'
+        #dnsspoof.start()
+        #running_daemons.append(dnsspoof)
+
+        #hostapd.start()
+        #running_daemons.append(hostapd)
+
+        #dhcpd.start()
+        #running_daemons.append(dhcpd)
+
+        #apache.start()
+        #running_daemons.append(apache)
+
+        #tinyproxy.start()
+        #running_daemons.append(tinyproxy)
+
+        #stunnel.start()
+        #running_daemons.append(stunnel)
+
+        crackapd.start()
+        running_daemons.append(crackapd)
+
+        invoke_metasploit()
+
+    elif options.no_upstream_eap_only:
+
+        ## configure core services
+        #dnsspoof = core.Dnsspoof(options)
+        #dhcpd = core.dhcpd.Dhcpd(options)
+        #hostapd = core.Hostapd(options)
+        #apache = core.Apache()
+        #tinyproxy = core.Tinyproxy()
+        #stunnel = core.Stunnel()
+        crackapd = core.Crackapd()
+
+        ## start core services
+        #print '[*] Starting dnsspoof'
+        #dnsspoof.start()
+        #running_daemons.append(dnsspoof)
+
+        #hostapd.start()
+        #running_daemons.append(hostapd)
+
+        #dhcpd.start()
+        #running_daemons.append(dhcpd)
+
+        #apache.start()
+        #running_daemons.append(apache)
+
+        #tinyproxy.start()
+        #running_daemons.append(tinyproxy)
+
+        #stunnel.start()
+        #running_daemons.append(stunnel)
+
+        crackapd.start()
+        running_daemons.append(crackapd)
+
+
+        invoke_metasploit()
+
     else:
 
-        print 'Entering no-upstream mode.'
+        error_handler('No valid mode specified. Aborting.')
 
     # start only selected plugins
     for plugin in plugins:
@@ -156,3 +343,7 @@ if __name__ == '__main__':
     for daemon in running_daemons:
         print '[*] Stopping', daemon.name
         daemon.stop()
+
+    print '[*] Destroying ennode: %s' % ENNODES
+    destroy_ennode()
+

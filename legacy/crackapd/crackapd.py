@@ -100,9 +100,9 @@ class GetIt(Thread):
 # *duh*  The main process entry...
 if __name__ == '__main__':
 
-	# We start off getting the path of the file being executed, and replace python script name with nada
-	# The will give us a base directory we can work from
-	THEPATH=str(os.path.realpath(__file__)).replace("crackapd.py", "")
+	## We start off getting the path of the file being executed, and replace python script name with nada
+	## The will give us a base directory we can work from
+	#THEPATH=str(os.path.realpath(__file__)).replace("crackapd.py", "")
 
 	# Global Variables.  These get overwritten in config file...
 	VERBOSE=1
