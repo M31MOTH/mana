@@ -5,7 +5,7 @@ import os
 import core
 
 from argparse import ArgumentParser, RawTextHelpFormatter
-from configs import ENNODES
+from configs import ENNODES, MSF_RC
 from plugins import *
 
 __version__ = '0.1.0'
@@ -37,8 +37,17 @@ def print_banner():
 
     print BANNER
 
-def invoke_metasploit():
-    os.system('msfconsole -r ./conf/karmetasploit.rc')
+def invoke_metasploit(options):
+    
+    # configure metasploit
+    with open(MSF_RC) as input_handle:
+        with open'%s.new' % MSF_RC) as output_handle:
+            for line in input_handle:
+                if 'INTERFACE' in line:
+                    line = 'set INTERFACE %s\n' % options.phy
+                output_handle.write(line)
+
+    os.system('msfconsole -r %s' % MSF_RC)
 
 def create_ennode():
     try:
@@ -48,6 +57,22 @@ def create_ennode():
 
 def destroy_ennode():
     os.remove(ENNODES)
+
+def initial_setup(options):
+
+    # perform nat initial setup
+    print '[*] Changing hostname to: ', options.hostname
+    core.utils.hostname(options.hostname)
+    print '[*] Killing wifi'
+    core.utils.rfkill()
+    print '[*] Bringing up %s with spoofed mac' % options.phy
+    core.utils.macchanger(options.phy)
+    print '[*] Bringing up %s with spoofed mac' % options.phy
+    core.utils.set_ip_forward(1)
+    print '[*] Creating ennode: %s' % ENNODES
+    create_ennode()
+    print '[*] Flushing iptables'
+    core.iptables.flush()
 
 if __name__ == '__main__':
 
@@ -146,188 +171,102 @@ if __name__ == '__main__':
             plugin.initialize(options)
 
 
+    initial_setup(options)
     running_daemons = []
-
-    ## perform nat initial setup
-    #print '[*] Changing hostname to: ', options.hostname
-    #core.utils.hostname(options.hostname)
-    #print '[*] Killing wifi'
-    #core.utils.rfkill()
-    #print '[*] Bringing up %s with spoofed mac' % options.phy
-    #core.utils.macchanger(options.phy)
-    #print '[*] Bringing up %s with spoofed mac' % options.phy
-    #core.utils.set_ip_forward(1)
-    print '[*] Creating ennode: %s' % ENNODES
-    create_ennode()
+    use_metasploit = False
 
     # core stuff goes here
     if options.nat:
 
-        core.utils.route.add_nat(options.phy)
-
-        core.iptables.flush()
+        core.utils.route.add(options.phy)
         core.iptables.nat(upstream=options.upstream, phy=options.phy)
 
         # configure and start core daemons 
-        hostapd = core.Hostapd(options)
-    
-        dhcpd = core.dhcpd.Dhcpd(options)
-
-        # start core services
-        hostapd.start()
-        running_daemons.append(hostapd)
-
-        dhcpd.start()
-        running_daemons.append(dhcpd)
+        core_services = [
+                            core.Hostapd(options),
+                            core.dhcpd.Dhcpd(options),
+                        ]
     
     elif options.no_upstream_all:
 
-        ## configure core services
-        #dnsspoof = core.Dnsspoof(options)
-        #dhcpd = core.dhcpd.Dhcpd(options)
-        #hostapd = core.Hostapd(options)
-        #apache = core.Apache()
-        #tinyproxy = core.Tinyproxy()
-        #stunnel = core.Stunnel()
-        crackapd = core.Crackapd()
+        core.utils.route.add_dual(phy=options.phy, phy0=options.phy0)
 
-        ## start core services
-        #print '[*] Starting dnsspoof'
-        #dnsspoof.start()
-        #running_daemons.append(dnsspoof)
+        # configure core services
+        core_services = [
+                            core.Crackapd(options),
+                            core.Hostapd(options),
+                            core.dhcpd.Dhcpd(options),
+                            core.Dnsspoof(options),
+                            core.Apache(),
+                            core.Stunnel(),
+                            core.Tinyproxy(),
+                        ]
 
-        #hostapd.start()
-        #running_daemons.append(hostapd)
 
-        #dhcpd.start()
-        #running_daemons.append(dhcpd)
-
-        #apache.start()
-        #running_daemons.append(apache)
-
-        #tinyproxy.start()
-        #running_daemons.append(tinyproxy)
-
-        #stunnel.start()
-        #running_daemons.append(stunnel)
-
-        crackapd.start()
-        running_daemons.append(crackapd)
-
-        invoke_metasploit()
+        use_metasploit = True
 
     elif options.no_upstream_eap:
 
-        ## configure core services
-        #dnsspoof = core.Dnsspoof(options)
-        #dhcpd = core.dhcpd.Dhcpd(options)
-        #hostapd = core.Hostapd(options)
-        #apache = core.Apache()
-        #tinyproxy = core.Tinyproxy()
-        #stunnel = core.Stunnel()
-        crackapd = core.Crackapd()
+        core.utils.route.add_dual(phy=options.phy, phy0=options.phy0)
 
-        ## start core services
-        #print '[*] Starting dnsspoof'
-        #dnsspoof.start()
-        #running_daemons.append(dnsspoof)
+        # configure core services
+        core_services = [
+                            core.Crackapd(options),
+                            core.Hostapd(options),
+                            core.dhcpd.Dhcpd(options),
+                            core.Dnsspoof(options),
+                            core.Apache(),
+                            core.Stunnel(),
+                            core.Tinyproxy(),
+                        ]
 
-        #hostapd.start()
-        #running_daemons.append(hostapd)
-
-        #dhcpd.start()
-        #running_daemons.append(dhcpd)
-
-        #apache.start()
-        #running_daemons.append(apache)
-
-        #tinyproxy.start()
-        #running_daemons.append(tinyproxy)
-
-        #stunnel.start()
-        #running_daemons.append(stunnel)
-
-        crackapd.start()
-        running_daemons.append(crackapd)
-
-        invoke_metasploit()
+        use_metasploit = True
 
     elif options.no_upstream:
 
-        ## configure core services
-        #dnsspoof = core.Dnsspoof(options)
-        #dhcpd = core.dhcpd.Dhcpd(options)
-        #hostapd = core.Hostapd(options)
-        #apache = core.Apache()
-        #tinyproxy = core.Tinyproxy()
-        #stunnel = core.Stunnel()
-        crackapd = core.Crackapd()
+        core.utils.route.add(options.phy)
 
-        ## start core services
-        #print '[*] Starting dnsspoof'
-        #dnsspoof.start()
-        #running_daemons.append(dnsspoof)
+        core.iptables.no_upstream(options.phy)
 
-        #hostapd.start()
-        #running_daemons.append(hostapd)
+        # configure core services
+        core_services = [
+                            core.Hostapd(options),
+                            core.dhcpd.Dhcpd(options),
+                            core.Dnsspoof(options),
+                            core.Apache(),
+                            core.Stunnel(),
+                            core.Tinyproxy(),
+                        ]
 
-        #dhcpd.start()
-        #running_daemons.append(dhcpd)
 
-        #apache.start()
-        #running_daemons.append(apache)
-
-        #tinyproxy.start()
-        #running_daemons.append(tinyproxy)
-
-        #stunnel.start()
-        #running_daemons.append(stunnel)
-
-        crackapd.start()
-        running_daemons.append(crackapd)
-
-        invoke_metasploit()
+        use_metasploit = True
 
     elif options.no_upstream_eap_only:
 
-        ## configure core services
-        #dnsspoof = core.Dnsspoof(options)
-        #dhcpd = core.dhcpd.Dhcpd(options)
-        #hostapd = core.Hostapd(options)
-        #apache = core.Apache()
-        #tinyproxy = core.Tinyproxy()
-        #stunnel = core.Stunnel()
-        crackapd = core.Crackapd()
+        core.utils.route.add(phy=options.phy)
 
-        ## start core services
-        #print '[*] Starting dnsspoof'
-        #dnsspoof.start()
-        #running_daemons.append(dnsspoof)
+        # configure core services
+        core_services = [
+                            core.Crackapd(options),
+                            core.Hostapd(options),
+                            core.dhcpd.Dhcpd(options),
+                            core.Dnsspoof(options),
+                            core.Apache(),
+                            core.Stunnel(),
+                            core.Tinyproxy(),
+                        ]
 
-        #hostapd.start()
-        #running_daemons.append(hostapd)
-
-        #dhcpd.start()
-        #running_daemons.append(dhcpd)
-
-        #apache.start()
-        #running_daemons.append(apache)
-
-        #tinyproxy.start()
-        #running_daemons.append(tinyproxy)
-
-        #stunnel.start()
-        #running_daemons.append(stunnel)
-
-        crackapd.start()
-        running_daemons.append(crackapd)
-
-
-        invoke_metasploit()
+        use_metasploit = True
 
     else:
 
         error_handler('No valid mode specified. Aborting.')
+
+    # start all selected core services
+    for daemon in core_services:
+        print '[*] Starting', daemon.name
+        daemon.start()
+        running_daemons.append(daemon)
 
     # start only selected plugins
     for plugin in plugins:
@@ -336,8 +275,10 @@ if __name__ == '__main__':
             plugin.start()
             running_daemons.append(plugin)
 
-
-    raw_input('[*] Press enter to quit.')
+    if use_metasploit:
+        invoke_metasploit(options)
+    else:
+        raw_input('[*] Press enter to quit.')
 
     # stop all running daemons
     for daemon in running_daemons:
@@ -346,4 +287,3 @@ if __name__ == '__main__':
 
     print '[*] Destroying ennode: %s' % ENNODES
     destroy_ennode()
-

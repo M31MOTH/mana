@@ -1,14 +1,21 @@
 import os
 
-def nat(phy=None, upstream=None):
+def flush():
 
     os.system('iptables --policy INPUT ACCEPT')
     os.system('iptables --policy FORWARD ACCEPT')
     os.system('iptables --policy OUTPUT ACCEPT')
     os.system('iptables -F')
     os.system('iptables -t nat -F')
+
+def nat(phy=None, upstream=None):
+
     os.system('iptables -t nat -A POSTROUTING -o %s -j MASQUERADE' % upstream)
     os.system('iptables -A FORWARD -i %s -o %s -j ACCEPT' % (phy, upstream))
+
+def no_upstream(phy):
+
+    os.system('iptables -t nat -A PREROUTING -i %s -p udp --dport 53 -j DNAT --to 10.0.0.1' % phy)
 
 def dns2proxy(phy=None):
     os.system('iptables -t nat -A PREROUTING -i %s -p udp --dport 53 -j DNAT --to 10.0.0.1' % phy)
@@ -59,9 +66,3 @@ def sslsplit(phy=None):
         ' -j REDIRECT --to-port 10110') % phy
     os.system(command)
 
-def flush():
-
-    os.system('iptables --policy INPUT ACCEPT')
-    os.system('iptables --policy FORWARD ACCEPT')
-    os.system('iptables --policy OUTPUT ACCEPT')
-    os.system('iptables -t nat -F')

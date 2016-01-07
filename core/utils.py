@@ -62,10 +62,20 @@ class route(object):
         pass
 
     @staticmethod
-    def add_nat(phy):
+    def add(phy):
+        os.system('ifconfig %s' % phy)
         os.system('ifconfig %s 10.0.0.1 netmask 255.255.255.0' % phy)
         os.system('route add -net 10.0.0.0 netmask 255.255.255.0 gw 10.0.0.1')
-    
+
+    @staticmethod
+    def add_dual(phy=None, phy0=None):
+
+        os.system('ifconfig %s' % phy)
+        os.system('ifconfig %s' % phy0)
+        os.system('ifconfig %s 10.0.0.1 netmask 255.255.255.0' % phy)
+        os.system('route add -net 10.0.0.0 netmask 255.255.255.0 gw 10.0.0.1')
+        os.system('ifconfig %s 10.1.0.1 netmask 255.255.255.0' % phy0)
+        os.system('route add -net 10.1.0.0 netmask 255.255.255.0 gw 10.1.0.1')
 
 def macchanger(phy):
 
