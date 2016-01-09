@@ -1,6 +1,9 @@
 The MANA Toolkit
 ================
-by Dominic White (singe) & Ian de Villiers @ sensepost (research@sensepost.com)
+
+MANA Toolkit by Dominic White (singe) & Ian de Villiers @ sensepost (research@sensepost.com)
+
+Modular driver code written by Gabriel Ryan (s0lst1c3) and based heavily on MITMf by byt3bl33d3r.
 
 Overview
 --------
