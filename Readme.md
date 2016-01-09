@@ -74,21 +74,25 @@ Note, the old silver Alfa (AWUS036H) does not support master mode and will not w
 Running
 -------
 
-Mana has several components, these can be started using the example start scripts, or you can use these as templates to mix your own.
+Mana has five modes:
 
-Mana will be installed to several directories:
-* The mana tools are installed to /usr/share/mana-toolkit
-* The start scripts are in /usr/share/mana-toolkit/run-mana
-* The captured traffic will be in /var/lib/mana-toolkit
-
-The different start scripts are listed below and must be edited to point to the right wifi device (default is wlan0, this may not be right for your installation):
-
-* start-nat-full.sh - Will fire up MANA in NAT mode (you'll need an upstream link) with all the MitM bells and whistles.
-* start-nat-simple.sh - Will fire up MANA in NAT mode, but without any of the firelamb, sslstrip, sslsplit etc.
+* start-nat-full.sh - Will fire up MANA in NAT mode (you'll need an upstream link). 
 * start-noupstream.sh - Will start MANA in a "fake Internet" mode. Useful for places where people leave their wifi on, but there is no upstream Internet. Also contains the captive portal.
 * start-noupstream-eap.sh - Will start MANA with the EAP attack and noupstream mode.
 
-While these should all work, it's advisable that you craft your own based on your specific needs.
+To perform a MITM attack with HSTS bypass using Mana, start it in NAT mode as follows:
+	
+	python mana.py --nat --essid Internet --channel 6 --hostname tplink --phy wlan0 --upstream eth0 --sslstrip --dns2proxy --sslsplit --netcreds
+
+To perform a noupstream attack, just use the appropriate flag:
+
+	python mana.py --no-upstream-all --phy wlp0s29u1u5 --essid netgear1
+
+For a full listing of Mana commands, refer to the help menu using the --help flag:
+
+	python mana.py --help
+
+Captured traffic will be in the various log directories you find in the project directory.
 
 These scripts kill NetworkManager as it prevents hostapd from using the wifi card. If you're using NetworkManager for your upstream connectivity, this can cause problems. Ideally, just manually configure the upstream adapter, however, you could also instruct NetworkManager to ignore certain devices by following the instructions at http://askubuntu.com/questions/21914/how-can-i-make-networkmanager-ignore-my-wireless-card/22166#22166
 
