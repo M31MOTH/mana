@@ -91,3 +91,184 @@ The different start scripts are listed below and must be edited to point to the 
 While these should all work, it's advisable that you craft your own based on your specific needs.
 
 These scripts kill NetworkManager as it prevents hostapd from using the wifi card. If you're using NetworkManager for your upstream connectivity, this can cause problems. Ideally, just manually configure the upstream adapter, however, you could also instruct NetworkManager to ignore certain devices by following the instructions at http://askubuntu.com/questions/21914/how-can-i-make-networkmanager-ignore-my-wireless-card/22166#22166
+
+Adding new plugins
+------------------
+
+You can add new plugins by placing them in the _plugins_ directory. Added plugins will be automatically loaded and initialized by Mana Toolkit as it runs. Plugin dependencies should be placed in the plugin_deps directory.
+
+Plugin Format
+-------------
+
+To create a new plugin for Mana Toolkit, first create a python file in the mana/plugins
+directory. For example, 
+
+	mana/plugins/example_plugin.py
+	
+At the of your plugin file, import the Plugin class from plugin.py
+
+	# in example_plugin.py
+	from plugin import Plugin
+
+Any dependencies needed by your plugin should be loaded from mana/plugin_deps, as shown below
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+
+Finally, import any needed modules from core in the following manner
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+After adding necessary import statements to your plugin file, define your plugin Class
+inhereting from Plugin like this:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+
+Then give your plugin a name without any whitespace, as well as an optname to be used
+by argparse. You can also add a description:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+		name = 'example_plugin'
+		optname = 'example'
+		desc = 'An example plugin.'
+
+You can tell Mana Toolkit to sleep _n_ seconds after starting your plugin by adding
+a sleep_time class variable. This can be useful for giving your plugin enough time
+to load. For example, to make Mana Toolkit sleep 3 seconds after starting example_plugin,
+we add sleep_time = 3 as shown here:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+		name = 'example_plugin'
+		optname = 'example'
+		desc = 'An example plugin.'
+		sleep_time = 3
+
+Once we've added our class variables, we define an initialize function. Your initialize
+function should take the options namespace from argparse as an argument, and use it to
+create a self.configs dictionary as shown below:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+		name = 'example_plugin'
+		optname = 'example'
+		desc = 'An example plugin.'
+		sleep_time = 3
+
+		def initialize(self, options):
+
+			self.configs = {
+
+				'interface' ; options.phy,
+				'ssid' : options.ssid,
+				'name' : options.name,
+			}
+
+The value of self.configs will be passed to your plugin's daemon process before it
+begins to run. Any code that should run before the plugin starts, such as iptables
+configurations or modifying a config file, should be placed in initialize().
+
+The options() method takes an argparse ArgumentParser as an argument. You can use it
+to add plugin specific command line arguments to Mana Toolkit:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+		name = 'example_plugin'
+		optname = 'example'
+		desc = 'An example plugin.'
+		sleep_time = 3
+
+		def initialize(self, options):
+
+			self.configs = {
+
+				'interface' ; options.phy,
+				'ssid' : options.ssid,
+				'name' : options.name,
+			}
+
+		def options(self, options):
+
+			options.add_argument('--name',
+							dest='name',
+							type=str,
+							required=False,
+							default='jimmy',
+							help='Pass your name as a command line argument.')
+
+Finally, the code needed to start your plugin should be placed in a static method
+named _start(). The _start() method should take a single dictionary as an argument,
+which will be identical to the dictionary you created in your initialize() method.
+The code in _start() should be a blocking call to a daemon using os.system(), or a 
+blocking call to a python module. For example:
+
+	# in example_plugin.py
+	from plugin import Plugin
+	from plugin_deps import example_daemon
+	from core import utils, iptables
+
+	class Example_plugin(Plugin):
+
+		name = 'example_plugin'
+		optname = 'example'
+		desc = 'An example plugin.'
+		sleep_time = 3
+
+		def initialize(self, options):
+
+			self.configs = {
+
+				'interface' ; options.phy,
+				'ssid' : options.ssid,
+				'name' : options.name,
+			}
+
+		def options(self, options):
+
+			options.add_argument('--name',
+							dest='name',
+							type=str,
+							required=False,
+							default='jimmy',
+							help='Pass your name as a command line argument.')
+
+		@staticmethod
+		def _start(configs):
+
+			# get values from configs dictionary
+			interface = configs['interface']
+			name = configs['name']
+
+			# start blocking call to daemon
+			example_daemon.run(interface, name)
