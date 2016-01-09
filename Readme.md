@@ -233,6 +233,8 @@ which will be identical to the dictionary you created in your initialize() metho
 The code in _start() should be a blocking call to a daemon using os.system(), or a 
 blocking call to a python module. For example:
 
+```python
+
 	# in example_plugin.py
 	from plugin import Plugin
 	from plugin_deps import example_daemon
@@ -272,3 +274,5 @@ blocking call to a python module. For example:
 
 			# start blocking call to daemon
 			example_daemon.run(interface, name)
+
+```
