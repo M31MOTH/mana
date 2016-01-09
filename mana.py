@@ -41,7 +41,7 @@ def invoke_metasploit(options):
     
     # configure metasploit
     with open(MSF_RC) as input_handle:
-        with open'%s.new' % MSF_RC) as output_handle:
+        with open('%s.new' % MSF_RC) as output_handle:
             for line in input_handle:
                 if 'INTERFACE' in line:
                     line = 'set INTERFACE %s\n' % options.phy
@@ -50,6 +50,7 @@ def invoke_metasploit(options):
     os.system('msfconsole -r %s' % MSF_RC)
 
 def create_ennode():
+    os.system('for i in `ls | grep ennode.node`; do rm -f $i; done')
     try:
         os.mkfifo(ENNODES)
     except OSError, e:
@@ -73,6 +74,8 @@ def initial_setup(options):
     create_ennode()
     print '[*] Flushing iptables'
     core.iptables.flush()
+
+    print 'exiting initial setup'
 
 if __name__ == '__main__':
 
@@ -165,15 +168,18 @@ if __name__ == '__main__':
         parser.print_help()
         error_handler('Aborting.')
 
+    # this has to come before initialize otherwise plugin specific iptables rules will be flushed
+    initial_setup(options)
+
     # load only selected plugins
     for plugin in plugins:
         if plugin.is_selected(options):
             plugin.initialize(options)
 
 
-    initial_setup(options)
     running_daemons = []
     use_metasploit = False
+
 
     # core stuff goes here
     if options.nat:

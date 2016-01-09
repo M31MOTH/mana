@@ -63,9 +63,19 @@ class route(object):
 
     @staticmethod
     def add(phy):
-        os.system('ifconfig %s' % phy)
+
+        print 'phy is', phy
+        # clear previous route 
+        os.system('ip route delete 10.0.0.0/24')
+
+        print 'entering route add'
+        #os.system('ifconfig %s' % phy)
+        print 'second ifconfig'
         os.system('ifconfig %s 10.0.0.1 netmask 255.255.255.0' % phy)
+        print 'route add thing'
         os.system('route add -net 10.0.0.0 netmask 255.255.255.0 gw 10.0.0.1')
+
+        print 'exiting route add'
 
     @staticmethod
     def add_dual(phy=None, phy0=None):

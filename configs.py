@@ -11,3 +11,5 @@ CRACKEX="/usr/bin/asleap"
 WORDLIST="/opt/wordlists/rockyou.txt"
 
 ENNODES="%s/ennode.node" % configs_path
+
+MSF_RC = '%s/karmetasploit.rc' % CONF_DIR

@@ -21,6 +21,8 @@ def dns2proxy(phy=None):
     os.system('iptables -t nat -A PREROUTING -i %s -p udp --dport 53 -j DNAT --to 10.0.0.1' % phy)
 
 def sslstrip(phy=None, sslstrip_port=10000):
+        
+    print 'iptabling'
 
     os.system('iptables -t nat -A PREROUTING -i %s -p tcp --destination-port 80 -j REDIRECT --to-port %s' % (phy, sslstrip_port))
 
