@@ -106,25 +106,32 @@ directory. For example,
 	mana/plugins/example_plugin.py
 	
 At the of your plugin file, import the Plugin class from plugin.py
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
+```
 
 Any dependencies needed by your plugin should be loaded from mana/plugin_deps, as shown below
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
 	from plugin_deps import example_daemon
+```
 
 Finally, import any needed modules from core in the following manner
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
 	from plugin_deps import example_daemon
 	from core import utils, iptables
+```
 
 After adding necessary import statements to your plugin file, define your plugin Class
 inhereting from Plugin like this:
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
@@ -132,11 +139,13 @@ inhereting from Plugin like this:
 	from core import utils, iptables
 
 	class Example_plugin(Plugin):
+```
 
 
 Then give your plugin a name without any whitespace, as well as an optname to be used
 by argparse. You can also add a description:
 
+```python
 	# in example_plugin.py
 	from plugin import Plugin
 	from plugin_deps import example_daemon
@@ -147,11 +156,13 @@ by argparse. You can also add a description:
 		name = 'example_plugin'
 		optname = 'example'
 		desc = 'An example plugin.'
+```
 
 You can tell Mana Toolkit to sleep _n_ seconds after starting your plugin by adding
 a sleep_time class variable. This can be useful for giving your plugin enough time
 to load. For example, to make Mana Toolkit sleep 3 seconds after starting example_plugin,
 we add sleep_time = 3 as shown here:
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
@@ -164,10 +175,12 @@ we add sleep_time = 3 as shown here:
 		optname = 'example'
 		desc = 'An example plugin.'
 		sleep_time = 3
+```
 
 Once we've added our class variables, we define an initialize function. Your initialize
 function should take the options namespace from argparse as an argument, and use it to
 create a self.configs dictionary as shown below:
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
@@ -189,6 +202,7 @@ create a self.configs dictionary as shown below:
 				'ssid' : options.ssid,
 				'name' : options.name,
 			}
+```
 
 The value of self.configs will be passed to your plugin's daemon process before it
 begins to run. Any code that should run before the plugin starts, such as iptables
@@ -196,6 +210,7 @@ configurations or modifying a config file, should be placed in initialize().
 
 The options() method takes an argparse ArgumentParser as an argument. You can use it
 to add plugin specific command line arguments to Mana Toolkit:
+```python
 
 	# in example_plugin.py
 	from plugin import Plugin
@@ -226,6 +241,7 @@ to add plugin specific command line arguments to Mana Toolkit:
 							required=False,
 							default='jimmy',
 							help='Pass your name as a command line argument.')
+```
 
 Finally, the code needed to start your plugin should be placed in a static method
 named _start(). The _start() method should take a single dictionary as an argument,
