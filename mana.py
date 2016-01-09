@@ -41,11 +41,12 @@ def invoke_metasploit(options):
     
     # configure metasploit
     with open(MSF_RC) as input_handle:
-        with open('%s.new' % MSF_RC) as output_handle:
+        with open('%s.new' % MSF_RC, 'w') as output_handle:
             for line in input_handle:
                 if 'INTERFACE' in line:
                     line = 'set INTERFACE %s\n' % options.phy
                 output_handle.write(line)
+            os.system('mv %s.new %s' % (MSF_RC, MSF_RC))
 
     os.system('msfconsole -r %s' % MSF_RC)
 

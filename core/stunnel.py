@@ -17,7 +17,7 @@ class Stunnel(object):
     @staticmethod
     def _start():
 
-        os.system('service stunnel start %s' % CONF_PATH)
+        os.system('service stunnel start')
 
     def start(self):
     
