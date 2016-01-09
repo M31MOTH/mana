@@ -279,15 +279,12 @@ class Hostapd(object):
     
     @staticmethod
     def _start(configs):
-        print 'starting hostapd'
-        os.system('%s %s' % (HOSTAPD_PATH, CONF_PATH))
-        print 'exiting start hostapd'
+        os.system('%s %s 2>&1 > hostapd.log' % (HOSTAPD_PATH, CONF_PATH))
     
     def start(self):
     
         self.proc = Process(target=self._start, args=({},))
         self.proc.daemon = True
-        raw_input('proceed?')
         self.proc.start()
         time.sleep(5)
 

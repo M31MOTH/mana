@@ -26,7 +26,7 @@ BANNER = '''
 '''
 
 def error_handler(msg):
-    sys.exit('[-] %s' % msg)
+    sys.exit('[!] %s' % msg)
 
 def am_i_root():
 
@@ -62,26 +62,28 @@ def destroy_ennode():
 
 def initial_setup(options):
 
-    # perform nat initial setup
     print '[*] Changing hostname to: ', options.hostname
     core.utils.hostname(options.hostname)
+
     print '[*] Killing wifi'
     core.utils.rfkill()
+
     print '[*] Bringing up %s with spoofed mac' % options.phy
     core.utils.macchanger(options.phy)
+
     print '[*] Bringing up %s with spoofed mac' % options.phy
     core.utils.set_ip_forward(1)
+
     print '[*] Creating ennode: %s' % ENNODES
     create_ennode()
+
     print '[*] Flushing iptables'
     core.iptables.flush()
-
-    print 'exiting initial setup'
 
 if __name__ == '__main__':
 
     am_i_root()
-        
+
     print_banner()
 
     parser = ArgumentParser(description='mana-toolkit version %s',
@@ -161,26 +163,23 @@ if __name__ == '__main__':
                     help='Set hostname to <hostname>')
 
     plugins = [plugin(parser) for plugin in plugin.Plugin.__subclasses__()]
-
-    print plugins
     options = parser.parse_args()
 
     if len(sys.argv) == 1:
         parser.print_help()
         error_handler('Aborting.')
 
-    # this has to come before initialize otherwise plugin specific iptables rules will be flushed
+    # this has to come before initialize otherwise plugin
+    # specific iptables rules will be flushed
     initial_setup(options)
 
     # load only selected plugins
-    for plugin in plugins:
-        if plugin.is_selected(options):
-            plugin.initialize(options)
+    loaded_plugins = [p for p in plugins if p.is_selected(options)]
+    for p in loaded_plugins:
+        print '[*] Initializing', p.name
+        p.initialize(options)
 
-
-    running_daemons = []
     use_metasploit = False
-
 
     # core stuff goes here
     if options.nat:
@@ -269,18 +268,13 @@ if __name__ == '__main__':
 
         error_handler('No valid mode specified. Aborting.')
 
+    # add selected plugins to list of services to start
+    core_services.extend(loaded_plugins)
+
     # start all selected core services
     for daemon in core_services:
         print '[*] Starting', daemon.name
         daemon.start()
-        running_daemons.append(daemon)
-
-    # start only selected plugins
-    for plugin in plugins:
-        if plugin.is_selected(options):
-            print '[*] Starting', plugin.name
-            plugin.start()
-            running_daemons.append(plugin)
 
     if use_metasploit:
         invoke_metasploit(options)
@@ -288,7 +282,7 @@ if __name__ == '__main__':
         raw_input('[*] Press enter to quit.')
 
     # stop all running daemons
-    for daemon in running_daemons:
+    for daemon in core_services:
         print '[*] Stopping', daemon.name
         daemon.stop()
 

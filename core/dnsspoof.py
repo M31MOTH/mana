@@ -21,7 +21,7 @@ class Dnsspoof(object):
     @staticmethod
     def _start(phy):
 
-        os.system('dnsspoof -f %s -i %s' % (CONF_PATH, phy))
+        os.system('dnsspoof -f %s -i %s 2>&1 > dnsspoof.log' % (CONF_PATH, phy))
 
     def start(self):
 
