@@ -107,19 +107,18 @@ You can add new plugins by placing them in the _plugins_ directory. Added plugin
 Plugin Format
 -------------
 
-To create a new plugin for Mana Toolkit, first create a python file in the mana/plugins
-directory. For example, 
+To create a new plugin for Mana Toolkit, first create a python file in the mana/plugins directory. For example:
 
 	mana/plugins/example_plugin.py
 	
-At the of your plugin file, import the Plugin class from plugin.py
+At the of your plugin file, import the Plugin class from plugin.py:
 ```python
 
 	# in example_plugin.py
 	from plugin import Plugin
 ```
 
-Any dependencies needed by your plugin should be loaded from mana/plugin_deps, as shown below
+Any dependencies needed by your plugin should be loaded from mana/plugin_deps, as shown below:
 ```python
 
 	# in example_plugin.py
@@ -127,7 +126,7 @@ Any dependencies needed by your plugin should be loaded from mana/plugin_deps, a
 	from plugin_deps import example_daemon
 ```
 
-Finally, import any needed modules from core in the following manner
+Finally, import any needed modules from core in the following manner:
 ```python
 
 	# in example_plugin.py
@@ -136,8 +135,7 @@ Finally, import any needed modules from core in the following manner
 	from core import utils, iptables
 ```
 
-After adding necessary import statements to your plugin file, define your plugin Class
-inhereting from Plugin like this:
+After adding necessary import statements to your plugin file, define your plugin Class inheriting from Plugin like this:
 ```python
 
 	# in example_plugin.py
@@ -149,8 +147,7 @@ inhereting from Plugin like this:
 ```
 
 
-Then give your plugin a name without any whitespace, as well as an optname to be used
-by argparse. You can also add a description:
+Then give your plugin a name without any whitespace, as well as an optname to be used by argparse. You can also add a description:
 
 ```python
 	# in example_plugin.py
@@ -165,10 +162,7 @@ by argparse. You can also add a description:
 		desc = 'An example plugin.'
 ```
 
-You can tell Mana Toolkit to sleep _n_ seconds after starting your plugin by adding
-a sleep_time class variable. This can be useful for giving your plugin enough time
-to load. For example, to make Mana Toolkit sleep 3 seconds after starting example_plugin,
-we add sleep_time = 3 as shown here:
+You can tell Mana Toolkit to sleep _n_ seconds after starting your plugin by adding a sleep_time class variable. This can be useful for giving your plugin enough time to load before starting the next daemon. For example, to make Mana Toolkit sleep 3 seconds after starting example_plugin, we add sleep_time = 3 as shown here:
 ```python
 
 	# in example_plugin.py
@@ -184,9 +178,7 @@ we add sleep_time = 3 as shown here:
 		sleep_time = 3
 ```
 
-Once we've added our class variables, we define an initialize function. Your initialize
-function should take the options namespace from argparse as an argument, and use it to
-create a self.configs dictionary as shown below:
+Once we've added our class variables, we define an initialize function. Your initialize function should take the options namespace from argparse as an argument, and use it to create a self.configs dictionary as shown below:
 ```python
 
 	# in example_plugin.py
@@ -211,12 +203,9 @@ create a self.configs dictionary as shown below:
 			}
 ```
 
-The value of self.configs will be passed to your plugin's daemon process before it
-begins to run. Any code that should run before the plugin starts, such as iptables
-configurations or modifying a config file, should be placed in initialize().
+The value of self.configs will be passed to your plugin's daemon process before it begins to run. Any code that should run before the plugin starts, such as iptables configurations or modifying a config file, should be placed within initialize().
 
-The options() method takes an argparse ArgumentParser as an argument. You can use it
-to add plugin specific command line arguments to Mana Toolkit:
+The options() method takes an argparse ArgumentParser as an argument. You can use it to add plugin specific command line arguments to Mana Toolkit:
 ```python
 
 	# in example_plugin.py
@@ -250,11 +239,7 @@ to add plugin specific command line arguments to Mana Toolkit:
 							help='Pass your name as a command line argument.')
 ```
 
-Finally, the code needed to start your plugin should be placed in a static method
-named _start(). The _start() method should take a single dictionary as an argument,
-which will be identical to the dictionary you created in your initialize() method.
-The code in _start() should be a blocking call to a daemon using os.system(), or a 
-blocking call to a python module. For example:
+Finally, the code needed to start your plugin should be placed in a static method named _start(). The _start() method should take a single dictionary as an argument, which will be identical to the dictionary you created in your initialize() method.  The code in _start() should be a blocking call to a daemon using os.system(), or a blocking call to a python module. For example:
 
 ```python
 
